@@ -1,20 +1,20 @@
 {
     "band": "M13",
     "plot_raw_data": false,
-    "plot_quality_masked": false,
+    "plot_quality_masked": true,
     "plot_water_masked": true,
+    "mask_water_flags":
+    [
+        "Shallow_Ocean",
+        "Deep_Ocean",
+        "Continental"
+    ],
     "mask_quality_flags": 
     [
-        "Cal_Fail Dead_Detector",
-        "Substitute_Cal",
-        "Low_Gain",
-        "Mixed_Gain",
-        "DG_Anomaly",
-        "Bowtie_Deleted",
-        "Missing_EV",
         "Cal_Fail",
         "Dead_Detector",
-        "Out_of_Range"
+        "Missing_EV",
+        "Bowtie_Deleted"
     ],
     "process_steps":
     [
@@ -30,7 +30,7 @@
             "name": "threshold",
             "params":
             {
-                "thresh": 1.0
+                "thresh": 4.0
             },
             "plot": true
         },

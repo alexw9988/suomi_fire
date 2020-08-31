@@ -11,7 +11,7 @@ from funcs import output, prepare, process
 
 class Processor():
 
-    def __init__(self, cfg_fp): 
+    def __init__(self, cfg_fp):
         if os.path.splitext(cfg_fp)[-1].lower() != '.json':
             raise ValueError("Only .json files allowed!")
         with open(cfg_fp, 'r') as fp:
@@ -40,32 +40,42 @@ class Processor():
 
         #Extract quality flags 
         self.quality_flags = obs_ds['observation_data']['{}_quality_flags'.format(band)][:]
-        self.quality_flag_meanings = obs_ds['observation_data']['{}_quality_flags'.format(band)].getncattr('flag_meanings')
-        self.quality_flag_masks = obs_ds['observation_data']['{}_quality_flags'.format(band)].getncattr('flag_masks')
-
+        self.quality_flag_values = obs_ds['observation_data']['{}_quality_flags'.format(band)].getncattr('flag_masks')
+        self.quality_flag_meanings = obs_ds['observation_data']['{}_quality_flags'.format(band)].getncattr('flag_meanings').split()
+        
         #Extract water mask 
-        self.water_mask = geo_ds['geolocation_data']['land_water_mask'][:]
+        self.land_water_flags = geo_ds['geolocation_data']['land_water_mask'][:]
+        self.land_water_values = geo_ds['geolocation_data']['land_water_mask'].getncattr('flag_values')
+        self.land_water_meanings = geo_ds['geolocation_data']['land_water_mask'].getncattr('flag_meanings').split()
 
         #Extract coordinates
         self.lat = geo_ds['geolocation_data']['latitude'][:]
         self.lon = geo_ds['geolocation_data']['longitude'][:]
+        if self.lat[0,0] < self.lat[-1,0]: #Flip array when plotting
+            self.array_reversed = True #Descending
+        else:
+            self.array_reversed = False #Ascending
         extent_lat = (np.amin(self.lat), np.amax(self.lat))
         extent_lon = (np.amin(self.lon), np.amax(self.lon))
         self.extent = (*extent_lon, *extent_lat)
-        
+
     def prepareData(self):
         #Convert masked array to regular array (to avoid problems with filters)
         self.data[-1] = self.data[-1].filled(np.nan)
 
         #Apply quality flag masking
-        self.data.append(prepare.maskQualityFlags(self.data[-1], 
+        self.data.append(prepare.maskFlags(self.data[-1], 
             self.quality_flags, self.quality_flag_meanings, 
-            self.quality_flag_masks, self.config['mask_quality_flags']))
+            self.quality_flag_values, self.config['mask_quality_flags'],
+            mode='binary_and'))
         self.step_names.append('quality_masked')
         self.plot_flags.append(self.config['plot_quality_masked'])
 
         #Apply water masking
-        self.data.append(prepare.maskWater(self.data[-1], self.water_mask))
+        self.data.append(prepare.maskFlags(self.data[-1], 
+            self.land_water_flags, self.land_water_meanings,
+            self.land_water_values, self.config['mask_water_flags'],
+            mode='equal'))
         self.step_names.append('water_masked')
         self.plot_flags.append(self.config['plot_water_masked'])
 
@@ -86,7 +96,7 @@ class Processor():
         output.saveGeoJSON(self.data[-1], self.lat, self.lon, output_fp)
         
         #Show plots 
-        output.plot(self.data, self.step_names, self.plot_flags, self.extent)
+        output.plot(self.data, self.step_names, self.plot_flags, self.extent, self.array_reversed)
 
 
 if __name__ == '__main__':

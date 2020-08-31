@@ -2,16 +2,14 @@
 import numpy as np
 
 
-def maskQualityFlags(data, quality_flags, quality_flag_meanings, quality_flag_masks, mask_quality_flags):
-    flag_masks = []
-    for mask in mask_quality_flags:
-        for i, meaning in enumerate(quality_flag_meanings):
-            if meaning == mask:
-                flag_masks.append(quality_flag_masks[i])
+def maskFlags(data, flag_array, flag_meanings, flag_values, flag_selection, mode='binary_and'):
+    for flag_name in flag_selection:
+        for i, meaning in enumerate(flag_meanings):
+            if meaning == flag_name:
+                value = flag_values[i]
+                if mode == 'binary_and': 
+                    data = np.where(flag_array & value, np.nan, data)
+                elif mode == 'equal':
+                    data = np.where(flag_array == value, np.nan, data)
 
-    output = np.ma.masked_where(quality_flags in flag_masks, data)
-    return output
-
-def maskWater(data, water_mask):
-    output = np.ma.masked_where(water_mask != 1, data)
-    return output
+    return data

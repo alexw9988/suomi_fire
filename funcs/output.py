@@ -8,7 +8,7 @@ import rasterio.features as rf
 import shapely.geometry as sg
 
 
-def plot(data, step_names, plot_flags, extent):
+def plot(data, step_names, plot_flags, extent, array_reversed):
     count = sum(plot_flags)
     grid_x = math.ceil(count**0.5)
     grid_y = math.floor(count**0.5)
@@ -20,7 +20,10 @@ def plot(data, step_names, plot_flags, extent):
     pos = 0
     for idx, plot_flag in enumerate(plot_flags):
         if plot_flag: 
-            ax[pos].matshow(data[idx], extent=extent, cmap='hot')
+            if array_reversed:
+                ax[pos].matshow(np.flip(data[idx]), extent=extent)
+            else:
+                ax[pos].matshow(data[idx], extent=extent)
             ax[pos].set_title(step_names[idx])
             pos += 1
         
