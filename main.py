@@ -6,7 +6,7 @@ import os
 import netCDF4 as nc
 import numpy as np
 
-import funcs
+from funcs import prepare, process, find, output
 
 
 class Processor():
@@ -34,9 +34,13 @@ class Processor():
 
         band = self.config['band']
         self.data = [obs_ds['observation_data']['{}'.format(band)][:]]
-        self.stepnames = ['raw_data']
+        self.step_names = ['raw_data']
+        self.plot_flags = [True] if self.config['plot_raw_data'] else [False]
 
         self.quality_flags = obs_ds['observation_data']['{}_quality_flags'.format(band)][:]
+        self.quality_flag_meanings = obs_ds['observation_data']['{}_quality_flags'.format(band)].getncattr('flag_meanings')
+        self.quality_flag_masks = obs_ds['observation_data']['{}_quality_flags'.format(band)].getncattr('flag_masks')
+
         self.water_mask = geo_ds['geolocation_data']['land_water_mask'][:]
 
         self.lat = geo_ds['geolocation_data']['latitude'][:]
@@ -46,25 +50,35 @@ class Processor():
         self.extent = (*extent_lon, *extent_lat)
         
     def prepareData(self):
-        self.data.append(funcs.maskQualityFlags(self.data[-1], self.quality_flags))
-        self.stepnames.append('quality_masked')
+        self.data[-1] = self.data[-1].filled(np.nan)
 
-        self.data.append(funcs.maskWater(self.data[-1], self.water_mask))
-        self.stepnames.append('water_masked')
+        self.data.append(prepare.maskQualityFlags(self.data[-1], 
+            self.quality_flags, self.quality_flag_meanings, 
+            self.quality_flag_masks, self.config['mask_quality_flags']))
+        self.step_names.append('quality_masked')
+        self.plot_flags.append(self.config['plot_quality_masked'])
 
-    def processData(self):
-        pass
+        self.data.append(prepare.maskWater(self.data[-1], self.water_mask))
+        self.step_names.append('water_masked')
+        self.plot_flags.append(self.config['plot_water_masked'])
+
+    def processData(self):  
+        for step in self.config['process_steps']:
+            name = step['name']
+            func = process.getProcessFunc(name)
+            if func is None: 
+                continue
+                
+            self.data.append(func(self.data[-1], step['params']))
+            self.step_names.append(name)
+            self.plot_flags.append(step['plot'])
 
     def findFeatures(self):
-        pass 
+        self.labeled_data, self.num_features = find.label(self.data[-1])
+
 
     def outputResults(self, output_fp):
-        plot_idxs = []
-        for plot_step in self.config['plot_steps']:
-            for idx, stepname in enumerate(self.stepnames):
-                if stepname == plot_step:
-                    plot_idxs.append(idx)
-        funcs.plot(self.data, self.stepnames, plot_idxs, self.extent)
+        output.plot(self.data, self.step_names, self.plot_flags, self.extent)
 
 
 if __name__ == '__main__':

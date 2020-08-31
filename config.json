@@ -1,8 +1,46 @@
 {
     "band": "M13",
-    "plot_steps": 
+    "plot_raw_data": false,
+    "plot_quality_masked": false,
+    "plot_water_masked": true,
+    "mask_quality_flags": 
     [
-        "quality_masked",
-        "water_masked"
+        "Cal_Fail Dead_Detector",
+        "Substitute_Cal",
+        "Low_Gain",
+        "Mixed_Gain",
+        "DG_Anomaly",
+        "Bowtie_Deleted",
+        "Missing_EV",
+        "Cal_Fail",
+        "Dead_Detector",
+        "Out_of_Range"
+    ],
+    "process_steps":
+    [
+        {
+            "name": "gaussian",
+            "params":
+            {
+                "sigma": 1
+            },
+            "plot": true
+        },
+        {
+            "name": "threshold",
+            "params":
+            {
+                "thresh": 1.0
+            },
+            "plot": true
+        },
+        {
+            "name": "binary_closing",
+            "params":
+            {
+                "structure_size": 2
+            },
+            "plot": true
+        }
     ]
 }
