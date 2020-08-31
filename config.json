@@ -1,3 +1,8 @@
 {
-    
+    "band": "M13",
+    "plot_steps": 
+    [
+        "quality_masked",
+        "water_masked"
+    ]
 }

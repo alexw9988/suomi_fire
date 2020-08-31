@@ -6,6 +6,8 @@ import os
 import netCDF4 as nc
 import numpy as np
 
+import funcs
+
 
 class Processor():
 
@@ -30,13 +32,25 @@ class Processor():
         self.obs_ds = obs_ds = nc.Dataset(obs_fp)
         self.geo_ds = geo_ds = nc.Dataset(geo_fp)
 
-        self.data = obs_ds['observation_data']['M13'][:]
-        self.quality_flags = obs_ds['observation_data']['M13_quality_flags'][:]
+        band = self.config['band']
+        self.data = [obs_ds['observation_data']['{}'.format(band)][:]]
+        self.stepnames = ['raw_data']
+
+        self.quality_flags = obs_ds['observation_data']['{}_quality_flags'.format(band)][:]
+        self.water_mask = geo_ds['geolocation_data']['land_water_mask'][:]
+
         self.lat = geo_ds['geolocation_data']['latitude'][:]
         self.lon = geo_ds['geolocation_data']['longitude'][:]
-
+        extent_lat = (np.amin(self.lat), np.amax(self.lat))
+        extent_lon = (np.amin(self.lon), np.amax(self.lon))
+        self.extent = (*extent_lon, *extent_lat)
+        
     def prepareData(self):
-        pass
+        self.data.append(funcs.maskQualityFlags(self.data[-1], self.quality_flags))
+        self.stepnames.append('quality_masked')
+
+        self.data.append(funcs.maskWater(self.data[-1], self.water_mask))
+        self.stepnames.append('water_masked')
 
     def processData(self):
         pass
@@ -45,7 +59,12 @@ class Processor():
         pass 
 
     def outputResults(self, output_fp):
-        pass 
+        plot_idxs = []
+        for plot_step in self.config['plot_steps']:
+            for idx, stepname in enumerate(self.stepnames):
+                if stepname == plot_step:
+                    plot_idxs.append(idx)
+        funcs.plot(self.data, self.stepnames, plot_idxs, self.extent)
 
 
 if __name__ == '__main__':
