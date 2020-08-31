@@ -1,3 +1,6 @@
 
 *.nc
 *.csv
+*.pyc
+__pycache__
+funcs/__pycache__
