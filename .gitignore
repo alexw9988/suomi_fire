@@ -4,3 +4,4 @@
 *.pyc
 __pycache__
 funcs/__pycache__
+output.json
