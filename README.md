@@ -18,6 +18,8 @@ Use `config.json` to select the frequency band, which quality flags to mask out,
 Besides the plotted images, a GeoJSON file will be exported to the desired output path `OUTPUT_FP` including all detected fire regions as Polygon Features. 
 
 ## Possible next steps 
-* Tune filter steps and settings
+* (Auto-)tune filter steps and settings
+* Somehow differentiate night/day or ascending/descending captures
 * Classify fires by size or intensity
 * Improve Polygon creation to avoid "jagged" edges
+* Add docstrings
