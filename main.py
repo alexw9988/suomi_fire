@@ -6,7 +6,7 @@ import os
 import netCDF4 as nc
 import numpy as np
 
-from funcs import prepare, process, find, output
+from funcs import output, prepare, process
 
 
 class Processor():
@@ -21,7 +21,6 @@ class Processor():
         self.loadData(obs_fp, geo_fp) 
         self.prepareData()
         self.processData()
-        self.findFeatures()
         self.outputResults(output_fp)
 
     def loadData(self, obs_fp, geo_fp):
@@ -73,11 +72,8 @@ class Processor():
             self.step_names.append(name)
             self.plot_flags.append(step['plot'])
 
-    def findFeatures(self):
-        self.labeled_data, self.num_features = find.label(self.data[-1])
-
-
     def outputResults(self, output_fp):
+        output.saveGeoJSON(self.data[-1], self.lat, self.lon, output_fp)
         output.plot(self.data, self.step_names, self.plot_flags, self.extent)
 
 

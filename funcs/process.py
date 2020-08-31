@@ -29,7 +29,6 @@ def _threshold(data, params):
     thresh = params['thresh']
 
     output = np.array(np.where(data>thresh, 1, 0), dtype=np.bool)
-    np.savetxt('data.csv',output)
     return output
 
 def _binaryClosing(data, params):
