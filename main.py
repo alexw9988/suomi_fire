@@ -28,20 +28,25 @@ class Processor():
            os.path.splitext(geo_fp)[-1].lower() != '.nc':
             raise ValueError("Only .nc files allowed!")
         
+        #Load datasets 
         self.obs_ds = obs_ds = nc.Dataset(obs_fp)
         self.geo_ds = geo_ds = nc.Dataset(geo_fp)
 
+        #Extract data
         band = self.config['band']
         self.data = [obs_ds['observation_data']['{}'.format(band)][:]]
         self.step_names = ['raw_data']
         self.plot_flags = [True] if self.config['plot_raw_data'] else [False]
 
+        #Extract quality flags 
         self.quality_flags = obs_ds['observation_data']['{}_quality_flags'.format(band)][:]
         self.quality_flag_meanings = obs_ds['observation_data']['{}_quality_flags'.format(band)].getncattr('flag_meanings')
         self.quality_flag_masks = obs_ds['observation_data']['{}_quality_flags'.format(band)].getncattr('flag_masks')
 
+        #Extract water mask 
         self.water_mask = geo_ds['geolocation_data']['land_water_mask'][:]
 
+        #Extract coordinates
         self.lat = geo_ds['geolocation_data']['latitude'][:]
         self.lon = geo_ds['geolocation_data']['longitude'][:]
         extent_lat = (np.amin(self.lat), np.amax(self.lat))
@@ -49,19 +54,23 @@ class Processor():
         self.extent = (*extent_lon, *extent_lat)
         
     def prepareData(self):
+        #Convert masked array to regular array (to avoid problems with filters)
         self.data[-1] = self.data[-1].filled(np.nan)
 
+        #Apply quality flag masking
         self.data.append(prepare.maskQualityFlags(self.data[-1], 
             self.quality_flags, self.quality_flag_meanings, 
             self.quality_flag_masks, self.config['mask_quality_flags']))
         self.step_names.append('quality_masked')
         self.plot_flags.append(self.config['plot_quality_masked'])
 
+        #Apply water masking
         self.data.append(prepare.maskWater(self.data[-1], self.water_mask))
         self.step_names.append('water_masked')
         self.plot_flags.append(self.config['plot_water_masked'])
 
-    def processData(self):  
+    def processData(self):
+        #Process each filter step specified in the config 
         for step in self.config['process_steps']:
             name = step['name']
             func = process.getProcessFunc(name)
@@ -73,7 +82,10 @@ class Processor():
             self.plot_flags.append(step['plot'])
 
     def outputResults(self, output_fp):
+        #Find features and export to GeoJSON file
         output.saveGeoJSON(self.data[-1], self.lat, self.lon, output_fp)
+        
+        #Show plots 
         output.plot(self.data, self.step_names, self.plot_flags, self.extent)
 
 

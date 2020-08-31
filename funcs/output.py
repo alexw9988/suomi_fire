@@ -37,7 +37,7 @@ def saveGeoJSON(data, lat, lon, output_fp):
         if shape[1] == 1:
             poly = geojson.Polygon(shape[0]['coordinates'])
             poly = geojson.utils.map_tuples(lambda c: _coordinateMapper(c, lat, lon), poly)
-            feature = geojson.Feature(geometry=poly)
+            feature = geojson.Feature(geometry=poly, properties={"fill": "#ff2600", "stroke": "#ff2600"})
             features.append(feature)
     
     collection = geojson.FeatureCollection(features)

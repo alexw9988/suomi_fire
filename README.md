@@ -9,10 +9,15 @@ Within the project folder run:
 
 Optional arguments: `-c CFG_FP -o OUTPUT_F`
 * `CFG_FP`: Config `.json` file
-* `OUTPUT_FP`: Output `.json` GEOJSON file
+* `OUTPUT_FP`: Output `.json` GeoJSON file
 
 ## Configuration
 Use `config.json` to select the frequency band, which quality flags to mask out, which processing steps to use (and in what order) and which parameters to use with these filters. You can also choose which of the filter steps to plot by setting their plot flag. 
 
 ## Output
 Besides the plotted images, a GeoJSON file will be exported to the desired output path `OUTPUT_FP` including all detected fire regions as Polygon Features. 
+
+## Possible next steps 
+* Tune filter steps and settings
+* Classify fires by size or intensity
+* Improve Polygon creation to avoid "jagged" edges
